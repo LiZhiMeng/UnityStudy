@@ -1,16 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
-public class Build : MonoBehaviour {
+public class Build : Editor {
 
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+
+    [MenuItem("Assets/BuildFont &1",false,1)]
+    public static void BuildFont()
+    {
+        Debug.Log("BuildFont");
+    }
+
 }
