@@ -1,0 +1,3 @@
+与本地库与远程库建立关联 git remote add origin git@github.com:LiZhiMeng/Shaders.git
+本地创建master与远程库关联 git pull --rebase origin master
+最后推送 git push origin master
