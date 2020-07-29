@@ -1,10 +1,11 @@
-﻿ using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-public class Build : Editor {
+public class Build : Editor
+{
 
     //private Build instance;
     //public Build Instance
@@ -20,50 +21,112 @@ public class Build : Editor {
     //}
 
     static string FontBuildInPath = "/Resources/font";
+    static string SoundBuildInPath = "/Resources/sound";
+    static string IconBuildPath = "/Resources/icon";
     public static string ABSUFFIX = "unity3d";
     enum AssetType
     {
         font,
+        sound,
+        icon,
     }
     static Dictionary<AssetType, string> TypeDic = new Dictionary<AssetType, string>();
 
 
-    [MenuItem("Assets/BuildFont &1",false,1)]
+    [MenuItem("Assets/EditorWindow &1",false)]
+    public static void OpenEditorWindow()
+    {
+        WindowTool tool = (WindowTool) EditorWindow.GetWindow(typeof(WindowTool));
+        tool.Show();
+    }
+
+
+    [MenuItem("Assets/BuildFont", false)]
     public static void BuildFont()
     {
-        Debug.Log("BuildFont");
+        Debug.Log("Menu: BuildFont");
         InitTypeDic();
         string type = TypeDic[AssetType.font];
         ClearAB();
-        SearchFileNeedBuild();
+        List<string> suff = new List<string>();
+        suff.Add("otf");
+        suff.Add("ttf");
+        SearchFileNeedBuild(Application.dataPath + FontBuildInPath, suff);
+        BuildBundle(GetBundlePathFromType(type));   
+        DeleteManifest(type);
+        ClearAB();
+        AssetDatabase.Refresh();
+    }
+
+    [MenuItem("Assets/BuildSound &2", false)]
+    public static void BuildSound()
+    {
+        Debug.Log("Menu: Build Sound");
+        ClearAB();
+        InitTypeDic();
+        string type = TypeDic[AssetType.sound];
+        List<string> suffix = new List<string>();
+        suffix.Add(".mp3");
+        string buildPath = SoundBuildInPath;
+        SearchFileNeedBuild(Application.dataPath + buildPath, suffix);
         BuildBundle(GetBundlePathFromType(type));
         DeleteManifest(type);
         ClearAB();
         AssetDatabase.Refresh();
     }
 
+    [MenuItem("Assets/BuildIcon &3",false)]
+    public static void BuildIcon()
+    {
+        Debug.Log("Menu: BuildIcon");
+        ClearAB();
+        InitTypeDic();
+        string buildPath = Application.dataPath + IconBuildPath;
+        List<string> suffix = new List<string>();
+        suffix.Add(".png");
+        SearchFileNeedBuild(buildPath, suffix);
+        string type = TypeDic[AssetType.icon];
+        BuildBundle(GetBundlePathFromType(type));
+        DeleteManifest(type);
+        ClearAB();
+    }
+
+    [MenuItem("Assets/GenerateAtlas &4",false)]
+    public static void GenerateAtlas()
+    {
+        
+    }
+
+
+    #region BuildModule
+
     /// <summary>
     /// 清理ab包
     /// </summary>
     static void ClearAB()
     {
-        string [] bundles =  AssetDatabase.GetAllAssetBundleNames();
-        for(int i = 0; i < bundles.Length; i++)
+        string[] bundles = AssetDatabase.GetAllAssetBundleNames();
+        for (int i = 0; i < bundles.Length; i++)
         {
-            string [] paths = AssetDatabase.GetAssetPathsFromAssetBundle(bundles[i]);
-            for(int j = 0; j < paths.Length; j++)
+            string[] paths = AssetDatabase.GetAssetPathsFromAssetBundle(bundles[i]);
+            for (int j = 0; j < paths.Length; j++)
             {
-                AssetImporter assetImporter =  AssetImporter.GetAtPath(paths[j]);
+                AssetImporter assetImporter = AssetImporter.GetAtPath(paths[j]);
                 assetImporter.assetBundleName = "";
             }
         }
+        AssetDatabase.Refresh();
     }
+
     /// <summary>
     /// 初始化类型字典
     /// </summary>
     static void InitTypeDic()
     {
+        TypeDic.Clear();
         TypeDic.Add(AssetType.font, "font");
+        TypeDic.Add(AssetType.sound, "sound");
+        TypeDic.Add(AssetType.icon, "icon");
     }
 
     /// <summary>
@@ -82,12 +145,13 @@ public class Build : Editor {
     /// </summary>
     static void BuildBundle(string outputPath)
     {
-        if(Directory.Exists(outputPath))
+        if (Directory.Exists(outputPath))
         {
-            Directory.Delete(outputPath,true);
+            Directory.Delete(outputPath, true);
         }
+        AssetDatabase.Refresh();
         Directory.CreateDirectory(outputPath);
-        BuildPipeline.BuildAssetBundles(outputPath, BuildAssetBundleOptions.ChunkBasedCompression,  EditorUserBuildSettings.activeBuildTarget );
+        BuildPipeline.BuildAssetBundles(outputPath, BuildAssetBundleOptions.ChunkBasedCompression, EditorUserBuildSettings.activeBuildTarget);
     }
 
     /// <summary>
@@ -96,36 +160,45 @@ public class Build : Editor {
     static void DeleteManifest(string type)
     {
         string[] files = Directory.GetFiles($"{Application.streamingAssetsPath}/{type}");
-        foreach(string _file in files)
+        foreach (string _file in files)
         {
-            if (_file.Contains("manifest")) 
-            {
-                File.Delete(_file);
-            }
+            if (_file.Contains("manifest")) { File.Delete(_file); }
         }
     }
 
     /// <summary>
-    /// 查询需打包的文件
+    /// 查询需打包的字体文件
     /// </summary>
-    static void SearchFileNeedBuild()
+    static void SearchFileNeedBuild(string buildPath, List<string> suffix)
     {
-        string [] filePaths =  Directory.GetFiles(Application.dataPath + FontBuildInPath);
-        for(int i = 0; i < filePaths.Length; i++)
+        string[] filePaths = Directory.GetFiles(buildPath);
+        for (int i = 0; i < filePaths.Length; i++)
         {
+            if (filePaths[i] == buildPath) continue;
             string _filePath = filePaths[i];
-            if (_filePath.ToLower() .Contains("ttf") || _filePath.ToLower() .Contains("otf"))
+            foreach (string suf in suffix)
             {
-                if (!_filePath.Contains("meta"))
+                if (_filePath.Contains(suf))
                 {
-                    string fileName =  Path.GetFileName(_filePath);
-                    int idx =  _filePath.IndexOf("Assets");
-                    string impPath = _filePath.Substring(idx); 
-                    AssetImporter assetImporter =  AssetImporter.GetAtPath(impPath);
-                    assetImporter.assetBundleName = fileName;
-                    assetImporter.assetBundleVariant = ABSUFFIX;
+                    if (!_filePath.Contains("meta"))
+                    {
+                        string fileName = Path.GetFileName(_filePath);
+                        int idx = _filePath.IndexOf("Assets");
+                        string impPath = _filePath.Substring(idx);
+                        AssetImporter assetImporter = AssetImporter.GetAtPath(impPath);
+                        assetImporter.assetBundleName = fileName;
+                        Debug.Log("fileName");
+                        assetImporter.assetBundleVariant = ABSUFFIX;
+                    }
                 }
             }
         }
     }
+    #endregion
+
+    public override void OnInspectorGUI()
+    {
+        GUILayout.Label("aaaa");
+    }
+
 }
