@@ -6,9 +6,21 @@ using UnityEngine;
 
 public class Build : Editor {
 
+    //private Build instance;
+    //public Build Instance
+    //{
+    //    get
+    //    {
+    //        if(instance == null)
+    //        {
+    //            instance = new Build();
+    //        }
+    //        return instance;
+    //    }
+    //}
 
     static string FontBuildInPath = "/Resources/font";
-    const string ABSUFFIX = "unity3d";
+    public static string ABSUFFIX = "unity3d";
     enum AssetType
     {
         font,
@@ -22,13 +34,12 @@ public class Build : Editor {
         Debug.Log("BuildFont");
         InitTypeDic();
         string type = TypeDic[AssetType.font];
-        
-        
         ClearAB();
         SearchFileNeedBuild();
         BuildBundle(GetBundlePathFromType(type));
         DeleteManifest(type);
         ClearAB();
+        AssetDatabase.Refresh();
     }
 
     /// <summary>
