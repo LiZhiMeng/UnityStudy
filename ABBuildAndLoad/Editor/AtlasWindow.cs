@@ -12,40 +12,32 @@ public class AtlasWindow : EditorWindow
     string textureDic;
     private void OnEnable()
     {
-        //textureDic = Application.dataPath + "/Resources/texture";
+        textureDic = Application.dataPath + "/Resources/texture";
     }
 
     //private string atlasStreamingAssetPath = Application.streamingAssetsPath + "/" + PublicEnum.ATLAS;
     private void OnGUI()
     {
 
+        GUILayout.BeginVertical();
+        string[] atlasDic = Directory.GetDirectories(textureDic);
+        AssetDatabase.Refresh();
+        foreach (string dic in atlasDic)
+        {
+            if (GUILayout.Button(dic))//点击了按钮，则打图集
+            {
+                //查找需要打的图集
+                string[] filse = Directory.GetFiles(dic);
+                if (GUILayout.Button("aa"))
+                {
 
-        //string [] atlasDic = Directory.GetDirectories(textureDic);
+                }
+            }
+        }
 
-        //AssetDatabase.Refresh();
+        GUILayout.EndVertical();
 
-        //GUILayout.BeginVertical();
-        //Debug.Log(atlasDic.Length);
-        //foreach(string dic in atlasDic)
-        //{
-        //    Debug.Log(dic);
-        //    if (GUILayout.Button(dic))//点击了按钮，则打图集
-        //    {
-        //        //查找需要打的图集
-        //        string [] filse =  Directory.GetFiles(dic);
 
-        //    }
-        //}
-
-        //GUILayout.EndVertical();
-
-        
-        Debug.Log("aa");
-        //GUILayout.BeginVertical();
-        GUILayout.Button("aa");
-        GUILayout.Button("bb");
-
-        //GUILayout.EndVertical();
 
 
 

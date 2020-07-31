@@ -99,6 +99,7 @@ public class Build : Editor
     {
         AtlasWindow atlasWindow = EditorWindow.GetWindowWithRect <AtlasWindow>(new Rect(150f, 100f, 800f, 600f));
         Debug.Log("sho");
+        atlasWindow.autoRepaintOnSceneChange = false;
         atlasWindow.Show();
     }
 
