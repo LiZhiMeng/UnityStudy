@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
@@ -58,7 +60,7 @@ public class Build : Editor
         AssetDatabase.Refresh();
     }
 
-    [MenuItem("Assets/BuildSound &2", false)]
+    // [MenuItem("Assets/BuildSound &2", false)]
     public static void BuildSound()
     {
         Debug.Log("Menu: Build Sound");
@@ -75,7 +77,7 @@ public class Build : Editor
         AssetDatabase.Refresh();
     }
 
-    [MenuItem("Assets/BuildIcon &3",false)]
+    // [MenuItem("Assets/BuildIcon &3",false)]
     public static void BuildIcon()
     {
         Debug.Log("Menu: BuildIcon");
@@ -94,13 +96,22 @@ public class Build : Editor
     /// <summary>
     /// 生成图集选择界面
     /// </summary>
-    [MenuItem("Assets/GenerateAtlas &4",false)]
+    // [MenuItem("Assets/GenerateAtlas &4",false)]
     public static void GenerateAtlas()
     {
         AtlasWindow atlasWindow = EditorWindow.GetWindowWithRect <AtlasWindow>(new Rect(150f, 100f, 800f, 600f));
-        Debug.Log("sho");
+        
         atlasWindow.autoRepaintOnSceneChange = false;
         atlasWindow.Show();
+    }
+    
+    [MenuItem("Edit/ClearConsole &3", false, 37)]
+    public static void ClearConsole()
+    {
+        Assembly assembly = Assembly.GetAssembly(typeof(SceneView));
+        Type logEntries = assembly.GetType("UnityEditor.LogEntries");
+        MethodInfo clearConsoleMethod = logEntries.GetMethod("Clear");
+        clearConsoleMethod.Invoke(new object(), null);
     }
 
 

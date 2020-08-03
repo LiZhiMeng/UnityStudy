@@ -15,10 +15,7 @@ public class WindowTool : EditorWindow
 
     private void OnGUI()
     {
-        GUILayout.BeginVertical();
-        GUILayout.Label("打包工具");
-        //第一行
-        GUILayout.BeginHorizontal();
+        
         if (GUILayout.Button("BuildFont"))
         {
             Build.BuildFont();
@@ -35,15 +32,7 @@ public class WindowTool : EditorWindow
         {
             Build.GenerateAtlas();
         }
-        GUILayout.EndHorizontal();
 
-        //第二行
-        GUILayout.BeginHorizontal();
-
-
-        GUILayout.EndHorizontal();
-
-        GUILayout.EndVertical();
     }
 
 }

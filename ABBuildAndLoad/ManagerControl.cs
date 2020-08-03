@@ -52,6 +52,5 @@ public class ManagerControl : MonoBehaviour  {
         image.sprite = _sprite;
         textureNode.GetComponent<RectTransform>().localPosition = Vector3.zero;
         image.SetNativeSize();
-        
     }
 }
