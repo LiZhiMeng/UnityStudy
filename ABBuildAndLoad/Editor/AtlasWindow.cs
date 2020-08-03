@@ -14,22 +14,22 @@ public class AtlasWindow : EditorWindow
         public string _atlasDic;
     }
 
-    string textureDic;
-    private string[] atlasDic;
+    private string _textureDic;
+    private string[] _atlasDic;
     private List<name_dic> list_dic = new List<name_dic>();
     private string atlasResPath;
     private void OnEnable()
     {
-        atlasResPath= Application.dataPath + "/Resources/atlas";
-        textureDic = Application.dataPath + "/Resources/texture";
-        atlasDic = Directory.GetDirectories(textureDic);
+        atlasResPath= Application.dataPath + "/PracticeAssets/Resources/atlas";
+        _textureDic = Application.dataPath + "/PracticeAssets/Resources/texture";
+        _atlasDic = Directory.GetDirectories(_textureDic);
         list_dic.Clear();
-        foreach (var VARIABLE in atlasDic)
+        foreach (var variable in _atlasDic)
         {
-            string [] split = VARIABLE.Split('\\');
+            string [] split = variable.Split('\\');
             string atlasName = split[split.Length - 1];
             name_dic dic = new name_dic();
-            dic._atlasDic = VARIABLE;
+            dic._atlasDic = variable;
             dic._atlasName = atlasName;
             list_dic.Add(dic);
         }
@@ -75,20 +75,40 @@ public class AtlasWindow : EditorWindow
         Directory.CreateDirectory(dicPath);
         AssetDatabase.Refresh();
         string pngPath = $"{dicPath}/{dic._atlasName}.png";
-        string dataPath = $"{dicPath}/{dic._atlasName}.txt";
-        StringBuilder atlasPaths = new StringBuilder();
+        int _idx = pngPath.IndexOf("Assets/");
+        pngPath = pngPath.Substring(_idx);
+        string dataPath = $"{dicPath}/{dic._atlasName}.txt"; 
+        dataPath = dataPath.Substring(_idx);
 
-        string arg = string.Format(commond, pngPath, dataPath,atlasPaths);
+        StringBuilder atlasPaths = new StringBuilder();
+        string inPath = $"{_textureDic}/{dic._atlasName}";
+        if (!Directory.Exists(inPath))
+        {
+            return;
+        }
+
+        string[] paths = Directory.GetFiles(inPath);
+        foreach (var VARIABLE in paths)
+        {
+            if(VARIABLE.Contains(".meta")) continue;
+            int idx =  VARIABLE.IndexOf("Assets/");
+            string _assetsPath = VARIABLE.Substring( idx);
+            atlasPaths.Append(_assetsPath);
+            atlasPaths.Append(" ");
+        }
+        string arg = string.Format(commond, pngPath, dataPath, atlasPaths.ToString());
+        EditorUtility.DisplayProgressBar("message","texturePacker",0.1f); 
+        Debug.Log("arg:"+arg);
         System.Diagnostics.Process process = new System.Diagnostics.Process();
         process.StartInfo.Arguments = arg;
         process.StartInfo.UseShellExecute = false;
         process.StartInfo.FileName = @"TexturePacker.exe";
-
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardError = true;
         process.Start();
         process.WaitForExit();
         process.Dispose();
+        EditorUtility.ClearProgressBar();
+        AssetDatabase.Refresh();
     }
-    
 }

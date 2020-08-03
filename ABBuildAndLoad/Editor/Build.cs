@@ -35,7 +35,7 @@ public class Build : Editor
     static Dictionary<AssetType, string> TypeDic = new Dictionary<AssetType, string>();
 
 
-    [MenuItem("Assets/EditorWindow &1",false)]
+    [MenuItem("Assets/EditorWindow &5",false)]
     public static void OpenEditorWindow()
     {
         WindowTool tool = (WindowTool) EditorWindow.GetWindow(typeof(WindowTool));
@@ -104,16 +104,6 @@ public class Build : Editor
         atlasWindow.autoRepaintOnSceneChange = false;
         atlasWindow.Show();
     }
-    
-    [MenuItem("Edit/ClearConsole &3", false, 37)]
-    public static void ClearConsole()
-    {
-        Assembly assembly = Assembly.GetAssembly(typeof(SceneView));
-        Type logEntries = assembly.GetType("UnityEditor.LogEntries");
-        MethodInfo clearConsoleMethod = logEntries.GetMethod("Clear");
-        clearConsoleMethod.Invoke(new object(), null);
-    }
-
 
     #region BuildModule
 
