@@ -75,10 +75,24 @@ public class AtlasWindow : EditorWindow
         Object o = PrefabUtility.CreateEmptyPrefab(RemovePathPrefix(outPrefabPath));
         TUIAtlas tAtlas = prefab.AddComponent<TUIAtlas>();
         TUIAtlasSheet tSheetList = ScriptableObject.CreateInstance<TUIAtlasSheet>();
-        TUiSpriteData data = new TUiSpriteData();
-        data.border = new Vector4(2,3,4,5);
-        tSheetList.uispriteList.Add(data);
+        AssetDatabase.CreateAsset(tSheetList, RemovePathPrefix( outTextAssetPath));
 
+
+        TextAsset txtAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(RemovePathPrefix( outTxtPath));
+        Debug.Log("Txt:" + txtAsset);
+        string txtString = txtAsset.ToString() ;
+        
+
+
+        //foreach (var item in collection)
+        //{
+        //    TUiSpriteData data = new TUiSpriteData();
+        //    data.border = new Vector4(2, 3, 4, 5);
+        //    tSheetList.uispriteList.Add(data);
+        //}
+        
+        
+        
         tAtlas.sheet = tSheetList;
         
         Texture2D tx2d = AssetDatabase.LoadAssetAtPath<Texture2D>(RemovePathPrefix(outPngPath));
