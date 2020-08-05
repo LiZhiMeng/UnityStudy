@@ -49,10 +49,49 @@ public class AtlasWindow : EditorWindow
                 string path = dic._atlasDic;
 
                 ProcessTexturePacker(dic);
+                AnalySheet(dic._atlasName);
             }
         }
     }
-    
+
+    /// <summary>
+    /// 解析图集
+    /// </summary>
+    void AnalySheet(string _atlasName)
+    {
+        string atlasPath = $"{atlasResPath}/{_atlasName}";
+        string outPngPath = $"{atlasResPath}/{_atlasName}/{_atlasName}.png";
+        string outTxtPath = $"{atlasResPath}/{_atlasName}/{_atlasName}.txt";
+        string outTextAssetPath = $"{atlasResPath}/{_atlasName}/{_atlasName}.asset";
+        string outPrefabPath = $"{atlasResPath}/{_atlasName}/{_atlasName}.prefab";
+
+        if (Directory.Exists(outPrefabPath))
+        {
+            Directory.Delete(outPrefabPath,true);
+        }
+        AssetDatabase.Refresh();
+
+        GameObject prefab = new GameObject();
+        Object o = PrefabUtility.CreateEmptyPrefab(RemovePathPrefix(outPrefabPath));
+        TUIAtlas tAtlas = prefab.AddComponent<TUIAtlas>();
+        TUIAtlasSheet tSheetList = ScriptableObject.CreateInstance<TUIAtlasSheet>();
+        TUiSpriteData data = new TUiSpriteData();
+        data.border = new Vector4(2,3,4,5);
+        tSheetList.uispriteList.Add(data);
+
+        tAtlas.sheet = tSheetList;
+        
+        Texture2D tx2d = AssetDatabase.LoadAssetAtPath<Texture2D>(RemovePathPrefix(outPngPath));
+        tAtlas.Texture = tx2d;
+        PrefabUtility.ReplacePrefab(prefab, o);
+        
+    }
+
+    public string RemovePathPrefix(string path)
+    {
+        int idx = path.IndexOf("Assets/");
+        return path.Substring(idx);
+    }
     
     /// <summary>
     /// 运行texturePacker打包图集
