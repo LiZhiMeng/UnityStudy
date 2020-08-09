@@ -34,11 +34,9 @@ public class AtlasWindow : EditorWindow
             list_dic.Add(dic);
         }
     }
-
-    //private string atlasStreamingAssetPath = Application.streamingAssetsPath + "/" + PublicEnum.ATLAS;
+    
     private void OnGUI()
     {
-        
         foreach (name_dic dic in list_dic)
         {
             if (GUILayout.Button(dic._atlasName))//点击了按钮，则打图集
@@ -72,40 +70,68 @@ public class AtlasWindow : EditorWindow
         AssetDatabase.Refresh();
 
         GameObject prefab = new GameObject();
-        Object o = PrefabUtility.CreateEmptyPrefab(RemovePathPrefix(outPrefabPath));
+        Object o = PrefabUtility.CreateEmptyPrefab(BuildTool.RemovePathPrefix(outPrefabPath));
         TUIAtlas tAtlas = prefab.AddComponent<TUIAtlas>();
         TUIAtlasSheet tSheetList = ScriptableObject.CreateInstance<TUIAtlasSheet>();
-        AssetDatabase.CreateAsset(tSheetList, RemovePathPrefix( outTextAssetPath));
+        AssetDatabase.CreateAsset(tSheetList, BuildTool.RemovePathPrefix( outTextAssetPath));
 
 
-        TextAsset txtAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(RemovePathPrefix( outTxtPath));
+        TextAsset txtAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(BuildTool.RemovePathPrefix( outTxtPath));
         Debug.Log("Txt:" + txtAsset);
         string txtString = txtAsset.ToString() ;
+        string[] split = txtString.Split('\n');
+        foreach (var _curSplit in split)
+        {
+            if (_curSplit.Contains(";"))
+            {
+                string [] _dataSplit = _curSplit.Split(';');
+                
+                TUiSpriteData data = new TUiSpriteData();
+                data.border = Vector4.zero;
+                data.spriteName = _dataSplit[0];
+                float x = 0;
+                float.TryParse(_dataSplit[1],out x);
+                float y = 0;
+                float.TryParse(_dataSplit[2],out y);
+                float width = 0;
+                float.TryParse(_dataSplit[3],out width);
+                float height = 0;
+                float.TryParse(_dataSplit[4],out height);
+                
+                data.rect = new Rect(x,y,width,height);
+                data.pivot = new Vector2(0.5f,0.5f);
+                tSheetList.uispriteList.Add(data);
+            }
+        }
         
+        SpriteMetaData[] metaData = new SpriteMetaData[tSheetList.uispriteList.Count];
+        for (int i = 0; i < metaData.Length; i++)
+        {
+            metaData[i].pivot = tSheetList.uispriteList[i].pivot;
+            metaData[i].border = tSheetList.uispriteList[i].border;
+            metaData[i].rect = tSheetList.uispriteList[i].rect;
+            metaData[i].name = tSheetList.uispriteList[i].spriteName;
+        }
+        
+        TextureImporter textureImporter = TextureImporter.GetAtPath(BuildTool.RemovePathPrefix(outPngPath)) as TextureImporter;
+        textureImporter.spritesheet = metaData;
+        textureImporter.textureType = TextureImporterType.Sprite;
+        textureImporter.spriteImportMode = SpriteImportMode.Multiple;
+        textureImporter.mipmapEnabled = false;
+        textureImporter.SaveAndReimport();
 
-
-        //foreach (var item in collection)
-        //{
-        //    TUiSpriteData data = new TUiSpriteData();
-        //    data.border = new Vector4(2, 3, 4, 5);
-        //    tSheetList.uispriteList.Add(data);
-        //}
-        
-        
-        
         tAtlas.sheet = tSheetList;
         
-        Texture2D tx2d = AssetDatabase.LoadAssetAtPath<Texture2D>(RemovePathPrefix(outPngPath));
+        
+        
+        
+        Texture2D tx2d = AssetDatabase.LoadAssetAtPath<Texture2D>(BuildTool. RemovePathPrefix(outPngPath));
         tAtlas.Texture = tx2d;
         PrefabUtility.ReplacePrefab(prefab, o);
         
     }
 
-    public string RemovePathPrefix(string path)
-    {
-        int idx = path.IndexOf("Assets/");
-        return path.Substring(idx);
-    }
+
     
     /// <summary>
     /// 运行texturePacker打包图集

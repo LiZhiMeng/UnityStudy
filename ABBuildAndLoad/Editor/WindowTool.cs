@@ -18,20 +18,25 @@ public class WindowTool : EditorWindow
         
         if (GUILayout.Button("BuildFont"))
         {
-            Build.BuildFont();
+            BuildTool.BuildFont();
         }
         if (GUILayout.Button("BuildSound"))
         {
-            Build.BuildSound();
+            BuildTool.BuildSound();
         }
         if (GUILayout.Button("BuildIcon"))
         {
-            Build.BuildIcon();
+            BuildTool.BuildIcon();
         }
         if (GUILayout.Button("GenerateAtlas"))
         {
-            Build.GenerateAtlas();
+            BuildTool.GenerateAtlas();
         }
+        if (GUILayout.Button("BuildAtlas"))
+        {
+            BuildTool.BuildAtlas();
+        }
+        
 
     }
 

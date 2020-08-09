@@ -3,40 +3,36 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEngine;
 
-public class Build : Editor
+public class BuildTool : Editor
 {
-
-    //private Build instance;
-    //public Build Instance
-    //{
-    //    get
-    //    {
-    //        if(instance == null)
-    //        {
-    //            instance = new Build();
-    //        }
-    //        return instance;
-    //    }
-    //}
-
-    static string FontBuildInPath = "/Resources/font";
-    static string SoundBuildInPath = "/Resources/sound";
-    static string IconBuildPath = "/Resources/icon";
-    public static string ABSUFFIX = "unity3d";
-     enum AssetType
+    
+    
+    
+    private static BuildTool instance;
+    public static BuildTool Instance()
     {
-        font,
-        sound,
-        icon,
+        if(instance == null)
+        {
+            instance = new BuildTool();
+            
+        }
+        return instance;
     }
-    static Dictionary<AssetType, string> TypeDic = new Dictionary<AssetType, string>();
+
+    static string FontBuildInPath = "/PracticeAssets/Resources/font";
+    static string SoundBuildInPath = "/PracticeAssets/Resources/sound";
+    static string IconBuildPath = "/PracticeAssets/Resources/icon";
+    static string AtlasBuildPath = "/PracticeAssets/Resources/atlas";
+    public static string ABSUFFIX = "unity3d";
+    public static List<string> _streamingAssetFileList = new List<string>();
 
 
     [MenuItem("Assets/EditorWindow &5",false)]
-    public static void OpenEditorWindow()
+    public static  void OpenEditorWindow()
     {
         WindowTool tool = (WindowTool) EditorWindow.GetWindow(typeof(WindowTool));
         tool.Show();
@@ -44,52 +40,52 @@ public class Build : Editor
 
 
     [MenuItem("Assets/BuildFont", false)]
-    public static void BuildFont()
+    public static  void BuildFont()
     {
         Debug.Log("Menu: BuildFont");
-        InitTypeDic();
-        string type = TypeDic[AssetType.font];
+
+        string type = TConstant._font;
         ClearAB();
         List<string> suff = new List<string>();
         suff.Add("otf");
         suff.Add("ttf");
         SearchFileNeedBuild(Application.dataPath + FontBuildInPath, suff);
         BuildBundle(GetBundlePathFromType(type));   
-        DeleteManifest(type);
+        DeleteManifest();
         ClearAB();
         AssetDatabase.Refresh();
     }
 
     // [MenuItem("Assets/BuildSound &2", false)]
-    public static void BuildSound()
+    public static  void BuildSound()
     {
         Debug.Log("Menu: Build Sound");
         ClearAB();
-        InitTypeDic();
-        string type = TypeDic[AssetType.sound];
+
+        string type = TConstant._sound;
         List<string> suffix = new List<string>();
         suffix.Add(".mp3");
         string buildPath = SoundBuildInPath;
         SearchFileNeedBuild(Application.dataPath + buildPath, suffix);
         BuildBundle(GetBundlePathFromType(type));
-        DeleteManifest(type);
+        DeleteManifest();
         ClearAB();
         AssetDatabase.Refresh();
     }
 
     // [MenuItem("Assets/BuildIcon &3",false)]
-    public static void BuildIcon()
+    public static  void BuildIcon()
     {
         Debug.Log("Menu: BuildIcon");
         ClearAB();
-        InitTypeDic();
+
         string buildPath = Application.dataPath + IconBuildPath;
         List<string> suffix = new List<string>();
         suffix.Add(".png");
         SearchFileNeedBuild(buildPath, suffix);
-        string type = TypeDic[AssetType.icon];
+        string type = TConstant._icon;
         BuildBundle(GetBundlePathFromType(type));
-        DeleteManifest(type);
+        DeleteManifest();
         ClearAB();
     }
 
@@ -97,20 +93,27 @@ public class Build : Editor
     /// 生成图集选择界面
     /// </summary>
     // [MenuItem("Assets/GenerateAtlas &4",false)]
-    public static void GenerateAtlas()
+    public static  void GenerateAtlas()
     {
         AtlasWindow atlasWindow = EditorWindow.GetWindowWithRect <AtlasWindow>(new Rect(150f, 100f, 800f, 600f));
-        
         atlasWindow.autoRepaintOnSceneChange = false;
         atlasWindow.Show();
     }
+
+    public static  void BuildAtlas()
+    {
+
+        BuildBundleAtlas window = EditorWindow.GetWindowWithRect<BuildBundleAtlas>(new Rect(150f, 150f, 800, 600f));
+        window.Show();
+    }
+    
 
     #region BuildModule
 
     /// <summary>
     /// 清理ab包
     /// </summary>
-    static void ClearAB()
+    public static void ClearAB()
     {
         string[] bundles = AssetDatabase.GetAllAssetBundleNames();
         for (int i = 0; i < bundles.Length; i++)
@@ -125,23 +128,14 @@ public class Build : Editor
         AssetDatabase.Refresh();
     }
 
-    /// <summary>
-    /// 初始化类型字典
-    /// </summary>
-    static void InitTypeDic()
-    {
-        TypeDic.Clear();
-        TypeDic.Add(AssetType.font, "font");
-        TypeDic.Add(AssetType.sound, "sound");
-        TypeDic.Add(AssetType.icon, "icon");
-    }
+
 
     /// <summary>
     /// 获取打包路径
     /// </summary>
     /// <param name="type"></param>
     /// <returns></returns>
-    static string GetBundlePathFromType(string type)
+    public static string GetBundlePathFromType(string type)
     {
         string bundlePath = $"{Application.streamingAssetsPath}/{type}";
         return bundlePath;
@@ -150,7 +144,7 @@ public class Build : Editor
     /// <summary>
     /// 打包
     /// </summary>
-    static void BuildBundle(string outputPath)
+    public  static  void BuildBundle(string outputPath)
     {
         if (Directory.Exists(outputPath))
         {
@@ -161,28 +155,80 @@ public class Build : Editor
         BuildPipeline.BuildAssetBundles(outputPath, BuildAssetBundleOptions.ChunkBasedCompression, EditorUserBuildSettings.activeBuildTarget);
     }
 
+
     /// <summary>
     /// 删除manifest
     /// </summary>
-    static void DeleteManifest(string type)
+    public static  void DeleteManifest()
     {
-        string[] files = Directory.GetFiles($"{Application.streamingAssetsPath}/{type}");
-        foreach (string _file in files)
+        _streamingAssetFileList.Clear();
+        GetList(Application.streamingAssetsPath);
+        foreach (var curFile in _streamingAssetFileList)
         {
-            if (_file.Contains("manifest")) { File.Delete(_file); }
+            if (File.Exists(curFile))
+            {
+                Debug.Log("file2:"+curFile);
+                File.Delete(curFile);    
+            }
+            
         }
+        Debug.Log("删除manifest完成");
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        
+
+    }
+
+    /// <summary>
+    /// 获取目录下所有文件
+    /// </summary>
+    /// <param name="path"></param>
+    public static void GetList(string path)
+    {
+        string [] dirs = Directory.GetDirectories(path);
+        for (int i = 0; i < dirs.Length; i++)
+        {
+            string [] files = Directory.GetFiles(dirs[i]);
+            for (int j = 0; j < files.Length; j++)
+            {
+                if (files[j].Contains("manifest"))
+                {
+                    _streamingAssetFileList.Add(files[j]);
+                }
+            }
+            if (Directory.GetDirectories(dirs[i]).Length > 0)
+            {
+                GetList(dirs[i]);
+            }
+        }
+    }
+
+
+    
+    /// <summary>
+    /// 删除指定路径
+    /// </summary>
+    /// <param name="path"></param>
+    public static void DeleteOutPutDir(string path)
+    {
+        path = $"{Application.streamingAssetsPath}/{path}";
+        if (Directory.Exists(path))
+        {
+            Directory.Delete(path,true);
+        }
+        Directory.CreateDirectory(path);
     }
 
     /// <summary>
     /// 查询需打包的字体文件
     /// </summary>
-    static void SearchFileNeedBuild(string buildPath, List<string> suffix)
+    public  static void SearchFileNeedBuild(string buildPath, List<string> suffix)
     {
         string[] filePaths = Directory.GetFiles(buildPath);
         for (int i = 0; i < filePaths.Length; i++)
         {
             if (filePaths[i] == buildPath) continue;
-            string _filePath = filePaths[i];
+            string _filePath = filePaths[i].ToLower();
             foreach (string suf in suffix)
             {
                 if (_filePath.Contains(suf))
@@ -190,7 +236,8 @@ public class Build : Editor
                     if (!_filePath.Contains("meta"))
                     {
                         string fileName = Path.GetFileName(_filePath);
-                        int idx = _filePath.IndexOf("Assets");
+                        
+                        int idx = _filePath.IndexOf("assets/");
                         string impPath = _filePath.Substring(idx);
                         AssetImporter assetImporter = AssetImporter.GetAtPath(impPath);
                         assetImporter.assetBundleName = fileName;
@@ -203,9 +250,13 @@ public class Build : Editor
     }
     #endregion
 
-    public override void OnInspectorGUI()
+    
+    public static string RemovePathPrefix(string path)
     {
-        GUILayout.Label("aaaa");
+        int idx = path.IndexOf("Assets/");
+        return path.Substring(idx);
     }
+    
+    
 
 }

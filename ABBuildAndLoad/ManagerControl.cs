@@ -7,17 +7,30 @@ using UnityEngine.UI;
 public class ManagerControl : MonoBehaviour  {
 
     // Use this for initialization
-    void Start () {
-
-        //LoadUIText();
-        //LoadSound();
+    void Start ()
+    {
+        LoadInit();
+        LoadUIText();
+        LoadSound();
         LoadIcon();
+        LoadAtlas();
     }
 	
 	// Update is called once per frame
 	void Update () {
 		
 	}
+
+    private GameObject _canvasGo;
+    void LoadInit()
+    {
+        _canvasGo = GameObject.Find("Canvas");
+        if (_canvasGo == null)
+        {
+            Debug.LogError("CanvasGo is null");
+        }
+        
+    }
 
     void LoadUIText()
     {
@@ -30,11 +43,10 @@ public class ManagerControl : MonoBehaviour  {
     void LoadSound()
     {
         AudioClip _clip = Load.Instance.LoadClip("mishu_1.mp3");
-        GameObject camera = GameObject.Find("Main Camera");
-        AudioSource source = camera.GetComponent<AudioSource>();
+        AudioSource source = _canvasGo.GetComponent<AudioSource>();
         if (source == null)
         {
-            source = camera.AddComponent<AudioSource>();
+            source = _canvasGo.AddComponent<AudioSource>();
         }
         source.clip = _clip;
         source.loop = true;
@@ -52,5 +64,21 @@ public class ManagerControl : MonoBehaviour  {
         image.sprite = _sprite;
         textureNode.GetComponent<RectTransform>().localPosition = Vector3.zero;
         image.SetNativeSize();
+    }
+    
+    void LoadAtlas()
+    {
+        GameObject atlasGo = GameObject.Find("AtlasGo");
+        if (atlasGo != null)
+        {
+            GameObject.DestroyImmediate(atlasGo);
+        }
+        atlasGo = new GameObject("AtlasGo");
+        atlasGo.SetParent(_canvasGo.transform);
+        Image img = atlasGo.AddComponent<Image>();
+        Sprite sp = Load.Instance.LoadAtlas("activity_g6", "bg_zcm2");
+        
+        img.sprite = sp;
+        img.SetNativeSize();
     }
 }
