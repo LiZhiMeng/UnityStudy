@@ -9,8 +9,7 @@ using UnityEngine;
 
 public class BuildTool : Editor
 {
-    
-    
+
     
     private static BuildTool instance;
     public static BuildTool Instance()
@@ -23,12 +22,7 @@ public class BuildTool : Editor
         return instance;
     }
 
-    static string FontBuildInPath = "/PracticeAssets/Resources/font";
-    static string SoundBuildInPath = "/PracticeAssets/Resources/sound";
-    static string IconBuildPath = "/PracticeAssets/Resources/icon";
-    static string AtlasBuildPath = "/PracticeAssets/Resources/atlas";
-    public static string ABSUFFIX = "unity3d";
-    public static List<string> _streamingAssetFileList = new List<string>();
+
 
 
     [MenuItem("Assets/EditorWindow &5",false)]
@@ -44,13 +38,29 @@ public class BuildTool : Editor
     {
         Debug.Log("Menu: BuildFont");
 
-        string type = TConstant._font;
+        string type = TCommon._font;
         ClearAB();
         List<string> suff = new List<string>();
         suff.Add("otf");
         suff.Add("ttf");
-        SearchFileNeedBuild(Application.dataPath + FontBuildInPath, suff);
-        BuildBundle(GetBundlePathFromType(type));   
+        SearchFileNeedBuild(Application.dataPath + TCommon.FontBuildInPath, suff);
+        BuildBundle(TCommon.GetBundlePathFromType(type));   
+        DeleteManifest();
+        ClearAB();
+        AssetDatabase.Refresh();
+    }
+    
+    /// <summary>
+    /// 打包模型
+    /// </summary>
+    [MenuItem("Assets/BuildModel", false)]
+    public static  void BuildModel()
+    {
+        Debug.Log("build Model");
+        string type = TCommon._model;
+        ClearAB();
+        BuildBundleModel.MarkAB(Application.dataPath +  TCommon.ModelBuildPath);
+        BuildBundle(TCommon.GetBundlePathFromType(type));
         DeleteManifest();
         ClearAB();
         AssetDatabase.Refresh();
@@ -62,29 +72,29 @@ public class BuildTool : Editor
         Debug.Log("Menu: Build Sound");
         ClearAB();
 
-        string type = TConstant._sound;
+        string type = TCommon._sound;
         List<string> suffix = new List<string>();
         suffix.Add(".mp3");
-        string buildPath = SoundBuildInPath;
+        string buildPath = TCommon.SoundBuildInPath;
         SearchFileNeedBuild(Application.dataPath + buildPath, suffix);
-        BuildBundle(GetBundlePathFromType(type));
+        BuildBundle(TCommon.GetBundlePathFromType(type));
         DeleteManifest();
         ClearAB();
         AssetDatabase.Refresh();
     }
 
-    // [MenuItem("Assets/BuildIcon &3",false)]
+    
     public static  void BuildIcon()
     {
         Debug.Log("Menu: BuildIcon");
         ClearAB();
 
-        string buildPath = Application.dataPath + IconBuildPath;
+        string buildPath = Application.dataPath + TCommon.IconBuildPath;
         List<string> suffix = new List<string>();
         suffix.Add(".png");
         SearchFileNeedBuild(buildPath, suffix);
-        string type = TConstant._icon;
-        BuildBundle(GetBundlePathFromType(type));
+        string type = TCommon._icon;
+        BuildBundle(TCommon.GetBundlePathFromType(type));
         DeleteManifest();
         ClearAB();
     }
@@ -102,14 +112,85 @@ public class BuildTool : Editor
 
     public static  void BuildAtlas()
     {
-
         BuildBundleAtlas window = EditorWindow.GetWindowWithRect<BuildBundleAtlas>(new Rect(150f, 150f, 800, 600f));
         window.Show();
     }
     
 
-    #region BuildModule
+    /// <summary>
+    /// 打包
+    /// </summary>
+    public static void BuildBundle(string outputPath)
+    {
+        if (Directory.Exists(outputPath))
+        {
+            Directory.Delete(outputPath, true);
+        }
 
+        AssetDatabase.Refresh();
+        Directory.CreateDirectory(outputPath);
+        BuildPipeline.BuildAssetBundles(outputPath, BuildAssetBundleOptions.ChunkBasedCompression,
+            EditorUserBuildSettings.activeBuildTarget);
+    }
+    
+    /// <summary>
+    /// 删除manifest
+    /// </summary>
+    public static void DeleteManifest()
+    {
+        TCommon._streamingAssetFileList.Clear();
+       TCommon.GetList(Application.streamingAssetsPath);
+        foreach (var curFile in TCommon._streamingAssetFileList)
+        {
+            if (File.Exists(curFile))
+            {
+                Debug.Log("file2:" + curFile);
+                File.Delete(curFile);
+            }
+        }
+
+        Debug.Log("删除manifest完成");
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+    }
+
+    
+    /// <summary>
+    /// 查询需打包的字体文件
+    /// </summary>
+    public static void SearchFileNeedBuild(string buildPath, List<string> suffix)
+    {
+        string[] filePaths = Directory.GetFiles(buildPath);
+        for (int i = 0; i < filePaths.Length; i++)
+        {
+            if (filePaths[i] == buildPath) continue;
+            string _filePath = filePaths[i].ToLower();
+            foreach (string suf in suffix)
+            {
+                if (_filePath.Contains(suf))
+                {
+                    if (!_filePath.Contains("meta"))
+                    {
+                        string fileName = Path.GetFileName(_filePath);
+
+                        int idx = _filePath.IndexOf("assets/");
+                        string impPath = _filePath.Substring(idx);
+                        UnityEditor.AssetImporter assetImporter = UnityEditor.AssetImporter.GetAtPath(impPath);
+                        assetImporter.assetBundleName = fileName;
+                        assetImporter.assetBundleVariant = TCommon.ABSUFFIX;
+                    }
+                }
+            }
+        }
+    }
+    
+    public static string RemovePathPrefix(string path)
+    {
+        int idx = path.IndexOf("Assets/");
+        return path.Substring(idx);
+    }
+    
+        
     /// <summary>
     /// 清理ab包
     /// </summary>
@@ -125,138 +206,7 @@ public class BuildTool : Editor
                 assetImporter.assetBundleName = "";
             }
         }
+
         AssetDatabase.Refresh();
     }
-
-
-
-    /// <summary>
-    /// 获取打包路径
-    /// </summary>
-    /// <param name="type"></param>
-    /// <returns></returns>
-    public static string GetBundlePathFromType(string type)
-    {
-        string bundlePath = $"{Application.streamingAssetsPath}/{type}";
-        return bundlePath;
-    }
-
-    /// <summary>
-    /// 打包
-    /// </summary>
-    public  static  void BuildBundle(string outputPath)
-    {
-        if (Directory.Exists(outputPath))
-        {
-            Directory.Delete(outputPath, true);
-        }
-        AssetDatabase.Refresh();
-        Directory.CreateDirectory(outputPath);
-        BuildPipeline.BuildAssetBundles(outputPath, BuildAssetBundleOptions.ChunkBasedCompression, EditorUserBuildSettings.activeBuildTarget);
-    }
-
-
-    /// <summary>
-    /// 删除manifest
-    /// </summary>
-    public static  void DeleteManifest()
-    {
-        _streamingAssetFileList.Clear();
-        GetList(Application.streamingAssetsPath);
-        foreach (var curFile in _streamingAssetFileList)
-        {
-            if (File.Exists(curFile))
-            {
-                Debug.Log("file2:"+curFile);
-                File.Delete(curFile);    
-            }
-            
-        }
-        Debug.Log("删除manifest完成");
-        AssetDatabase.SaveAssets();
-        AssetDatabase.Refresh();
-        
-
-    }
-
-    /// <summary>
-    /// 获取目录下所有文件
-    /// </summary>
-    /// <param name="path"></param>
-    public static void GetList(string path)
-    {
-        string [] dirs = Directory.GetDirectories(path);
-        for (int i = 0; i < dirs.Length; i++)
-        {
-            string [] files = Directory.GetFiles(dirs[i]);
-            for (int j = 0; j < files.Length; j++)
-            {
-                if (files[j].Contains("manifest"))
-                {
-                    _streamingAssetFileList.Add(files[j]);
-                }
-            }
-            if (Directory.GetDirectories(dirs[i]).Length > 0)
-            {
-                GetList(dirs[i]);
-            }
-        }
-    }
-
-
-    
-    /// <summary>
-    /// 删除指定路径
-    /// </summary>
-    /// <param name="path"></param>
-    public static void DeleteOutPutDir(string path)
-    {
-        path = $"{Application.streamingAssetsPath}/{path}";
-        if (Directory.Exists(path))
-        {
-            Directory.Delete(path,true);
-        }
-        Directory.CreateDirectory(path);
-    }
-
-    /// <summary>
-    /// 查询需打包的字体文件
-    /// </summary>
-    public  static void SearchFileNeedBuild(string buildPath, List<string> suffix)
-    {
-        string[] filePaths = Directory.GetFiles(buildPath);
-        for (int i = 0; i < filePaths.Length; i++)
-        {
-            if (filePaths[i] == buildPath) continue;
-            string _filePath = filePaths[i].ToLower();
-            foreach (string suf in suffix)
-            {
-                if (_filePath.Contains(suf))
-                {
-                    if (!_filePath.Contains("meta"))
-                    {
-                        string fileName = Path.GetFileName(_filePath);
-                        
-                        int idx = _filePath.IndexOf("assets/");
-                        string impPath = _filePath.Substring(idx);
-                        AssetImporter assetImporter = AssetImporter.GetAtPath(impPath);
-                        assetImporter.assetBundleName = fileName;
-                        Debug.Log("fileName");
-                        assetImporter.assetBundleVariant = ABSUFFIX;
-                    }
-                }
-            }
-        }
-    }
-    #endregion
-
-    
-    public static string RemovePathPrefix(string path)
-    {
-        int idx = path.IndexOf("Assets/");
-        return path.Substring(idx);
-    }
-    
-    
-
 }

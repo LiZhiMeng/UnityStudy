@@ -41,11 +41,7 @@ public class AtlasWindow : EditorWindow
         {
             if (GUILayout.Button(dic._atlasName))//点击了按钮，则打图集
             {
-                Debug.Log(dic._atlasName);
-                Debug.Log(dic._atlasDic);
-                //查找需要打的图集
                 string path = dic._atlasDic;
-
                 ProcessTexturePacker(dic);
                 AnalySheet(dic._atlasName);
             }
@@ -138,12 +134,7 @@ public class AtlasWindow : EditorWindow
     /// </summary>
     void ProcessTexturePacker(name_dic dic)
     {
-        string AtlasSize = "1024";
-        string commond = @" --sheet {0} --data {1} --format unity-texture2d --trim-mode None --pack-mode Best --algorithm Polygon --max-size " + AtlasSize + @" --size-constraints POT --disable-rotation --scale 1 {2}";
 
-        // D:\Program Files\TexturePacker 2.4.5\TexturePacker\bin>TexturePacker.exe C:\Users\user\Desktop\temp\SE_0053\3_0001.png --max-size 4096 --trim --allow-free-size --format sparrow --shape-padding 0 --bor
-        // der-padding 0 --disable-rotation --algorithm MaxRects --opt RGBA4444 --scale 1 --sheet C:\Users\user\Desktop\temp\SE_0053\out_put.png --data C:\Users\user\Desktop\temp\SE_0053\out_put.xml
-            
         //创建目录
         string dicPath = atlasResPath + "/" + dic._atlasName;
         if (Directory.Exists(dicPath))
@@ -175,9 +166,11 @@ public class AtlasWindow : EditorWindow
             atlasPaths.Append(_assetsPath);
             atlasPaths.Append(" ");
         }
+        string AtlasSize = "1024";
+        //核心代码：  传入四个参数， 依次是commond命令载体， 打成整图后的图片路径， 生成的txt文件位置，   需要被打成图集的图片们（依次用空格间隔开）
+      string commond = @" --sheet {0} --data {1} --format unity-texture2d --trim-mode None --pack-mode Best --algorithm Polygon --max-size " + AtlasSize + @" --size-constraints POT --disable-rotation --scale 1 {2}";
         string arg = string.Format(commond, pngPath, dataPath, atlasPaths.ToString());
-        EditorUtility.DisplayProgressBar("message","texturePacker",0.1f); 
-        Debug.Log("arg:"+arg);
+        EditorUtility.DisplayProgressBar("message","texturePacker",0.1f);
         System.Diagnostics.Process process = new System.Diagnostics.Process();
         process.StartInfo.Arguments = arg;
         process.StartInfo.UseShellExecute = false;

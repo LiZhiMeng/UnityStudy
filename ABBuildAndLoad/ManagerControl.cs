@@ -10,10 +10,11 @@ public class ManagerControl : MonoBehaviour  {
     void Start ()
     {
         LoadInit();
-        LoadUIText();
-        LoadSound();
-        LoadIcon();
-        LoadAtlas();
+        // LoadUIText();
+        // LoadSound();
+        // LoadIcon();
+        // LoadAtlas();
+        LoadModel();
     }
 	
 	// Update is called once per frame
@@ -29,7 +30,6 @@ public class ManagerControl : MonoBehaviour  {
         {
             Debug.LogError("CanvasGo is null");
         }
-        
     }
 
     void LoadUIText()
@@ -80,5 +80,12 @@ public class ManagerControl : MonoBehaviour  {
         
         img.sprite = sp;
         img.SetNativeSize();
+    }
+
+    void LoadModel()
+    {
+        string modelName = "beauty";
+        GameObject modelGo = Load.Instance.LoadModel(modelName);
+        modelGo.SetParent(_canvasGo.transform);
     }
 }

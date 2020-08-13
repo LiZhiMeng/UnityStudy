@@ -36,8 +36,9 @@ public class WindowTool : EditorWindow
         {
             BuildTool.BuildAtlas();
         }
-        
-
+        if (GUILayout.Button("BuildModel"))
+        {
+            BuildTool.BuildModel();
+        }
     }
-
 }
